@@ -1,0 +1,132 @@
+; ════════════════════════════════════════════════════════
+; 서버 설정 템플릿  (config_template.txt)
+; ════════════════════════════════════════════════════════
+;
+; [servers.csv 사용법]
+;   Name, PublicIP, LocalIP, Explain 컬럼을 가진 CSV 파일.
+;   파일이 있으면 COMMON_HEADER 의 SERVER 줄을 자동 교체합니다.
+;   없으면 아래 COMMON_HEADER 안에 직접 SERVER 줄을 작성하세요.
+;
+COMMON_HEADER
+@	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.TOKEN_HERE
+;	NAME	PUBLIC		LOCAL		EXPLAIN
+; (servers.csv 가 있으면 아래 SERVER 줄은 자동 교체됩니다)
+SERVER	LOGIN	1.2.3.4	192.168.0.1	Update, Login
+SERVER	UPDATE	1.2.3.4	192.168.0.2	Update
+SERVER	ACCOUNT	1.2.3.4	192.168.0.3	AccDB
+SERVER	GAME11	1.2.3.5	192.168.0.11	Gate, Game
+SERVER	GAME12	1.2.3.6	192.168.0.12	Gate, Game
+SERVER	GAMEDB11	1.2.3.7	192.168.0.21	GameDB
+SERVER	GAMEDB12	1.2.3.8	192.168.0.22	GameDB
+SERVER	GATE1	1.2.3.9	192.168.0.30	Gate
+SERVER	GATE2	1.2.3.10	192.168.0.31	Gate
+
+; ────────────────────────────────────────────────────────
+; [SERVER_LIST]  생성할 서버 목록
+;
+;   ACCOUNT:1       → ACCOUNT  (번호 없음)
+;   GAME:11,12      → GAME11, GAME12
+;   GAMEDB:11-13    → GAMEDB11, GAMEDB12, GAMEDB13  (범위)
+;   GATE:1-3        → GATE1, GATE2, GATE3
+;   GAME:11,12,21,22 → GAME11, GAME12, GAME21, GAME22
+;
+;   ※ 숫자 포맷은 입력 그대로 사용됩니다.
+;     "1"  → GATE1   /  "01" → GATE01   /  범위 "1-3" → GATE1,GATE2,GATE3
+; ────────────────────────────────────────────────────────
+SERVER_LIST
+LOGIN:1
+ACCOUNT:1
+GAME:11,12
+GAMEDB:11,12
+GATE:1,2
+
+; ════════════════════════════════════════════════════════
+; [$TEMPLATE:표시접두사#TYPE]
+;   SERVER_LIST 의 TYPE 에 속한 서버마다 설정 파일을 자동 생성합니다.
+;   출력 파일명 = 표시접두사 + 숫자접미사
+;   예) $TEMPLATE:Game#GAME + GAME11,GAME12 → Game11.txt, Game12.txt
+;
+;   표시접두사를 생략하면 서버 이름 자체가 표시 이름이 됩니다.
+;   예) $TEMPLATE:GATE  → GATE1.txt, GATE2.txt
+;
+; [FOREACH:TYPE  라인]
+;   TYPE 의 모든 서버에 대해 커넥션 라인을 반복 생성합니다.
+;   자기 자신과 이름이 같은 서버는 건너뜁니다.
+;
+; [플레이스홀더]
+;   {SELF}      현재 서버 전체 이름  (예: GAME11)
+;   {SELF_NUM}  현재 서버 숫자 접미사 (예: 11)
+;   {EACH}      FOREACH 반복 대상 서버 전체 이름  (예: GATE1)
+;   {EACH_NUM}  FOREACH 반복 대상 서버 숫자 접미사 (예: 1)
+;
+; [포트 자동 계산 - GroupNumber 기반]
+;   ACCOUNT  <-> GAME      : 25000 + GroupNumber
+;   GAME     <-> GATE      : 10000 + gateNum*100 + GroupNumber
+;   GAME     <-> GAMEDB    : 30300 + GroupNumber
+;   GAME     <-> GAME      : 30000 + GroupNumber  (월드서버)
+;   LOGIN    <-> GAME      : 21000 + GroupNumber
+;   LOGIN    <-> GAMEDB    : 22000 + GroupNumber
+;   LOGIN    <-> GATE      : 20100 + gateNum  (GroupNumber 무관)
+;   LOGIN    <-> ACCOUNT   : 20000 (고정)
+;   TRADEDB  <-> GAME      : 25100 + GroupNumber
+;   UNION    <-> GAME      : 40100 + GroupNumber
+;
+; [LisOrConn]  0 = Listen (상대방이 접속해 옴)  /  1 = Connect (내가 접속)
+; [GroupNumber] 100 이하 숫자 (포트 자동 계산)  /  X = 다음 칸을 Port 직접 지정
+; [Soc]  '-' 또는 숫자 (AssignSoc 가 자동 부여하므로 아무 값이나 가능)
+; ════════════════════════════════════════════════════════
+
+; ── ACCOUNT 서버 (1개, $TEMPLATE 사용) ────────────────────────────────────
+$TEMPLATE:AccDB#ACCOUNT
+; LisOrConn - Comment  LocalIP  ConnectIP  [GroupNumber]  RecvBuf  SendBuf  ReadQ  SendQ
+0 - User ACCOUNT:LOCAL ACCOUNT:LOCAL X 0 4096 4096 4096 4096
+FOREACH:GAME 0 - Game{EACH_NUM} {EACH}:LOCAL ACCOUNT:LOCAL {EACH_NUM} 4096 4096 10240000 10240000
+1 - Login ACCOUNT:LOCAL LOGIN:LOCAL 1 4096 4096 1024000 1024000
+
+; ── LOGIN 서버 (1개, FOREACH 로 GATE/GAME/GAMEDB 자동 연결) ─────────────────
+; LOGIN↔GATE   : 20100 + gateNum  (포트 자동 계산, GroupNumber 무관)
+; LOGIN↔GAME   : 21000 + GroupNumber  ({EACH_NUM} 사용)
+; LOGIN↔GAMEDB : 22000 + GroupNumber  ({EACH_NUM} 사용)
+; LOGIN↔ACCOUNT: 20000 (고정, GroupNumber 무관)
+$TEMPLATE:Login#LOGIN
+0 - User LOGIN:LOCAL LOGIN:LOCAL X 0 8192 8192 512000 512000
+0 - AccDB ACCOUNT:LOCAL LOGIN:LOCAL 1 160000 160000 5000000 5000000
+FOREACH:GATE 0 - Gate{EACH_NUM} {EACH}:LOCAL LOGIN:LOCAL {EACH_NUM} 160000 160000 5000000 5000000
+FOREACH:GAME 0 - Game{EACH_NUM} {EACH}:LOCAL LOGIN:LOCAL {EACH_NUM} 160000 160000 5000000 5000000
+FOREACH:GAMEDB 0 - GameDB{EACH_NUM} {EACH}:LOCAL LOGIN:LOCAL {EACH_NUM} 160000 160000 5000000 5000000
+
+; ── GAME 서버 (여러 개, FOREACH 로 GATE/GAMEDB 자동 연결) ─────────────────
+; {SELF_NUM} = GroupNumber 로 사용 → ACCOUNT 포트, GAMEDB 포트 자동 계산
+; FOREACH:GATE 에서 {EACH}=GATE서버, gateNum 은 ApplyPortRules 가 자동 추출
+$TEMPLATE:Game#GAME
+0 - User 127.0.0.1 127.0.0.1 X 0 160000 160000 50000 50000
+FOREACH:GATE 0 - Gate{EACH_NUM} {EACH}:LOCAL {SELF}:LOCAL {SELF_NUM} 160000 160000 10000000 30000000
+1 - AccDB {SELF}:LOCAL ACCOUNT:LOCAL {SELF_NUM} 160000 160000 10240000 10240000
+1 - Login {SELF}:LOCAL LOGIN:LOCAL {SELF_NUM} 160000 160000 1000000 1000000
+FOREACH:GAMEDB 1 - GameDB{EACH_NUM} {SELF}:LOCAL {EACH}:LOCAL {SELF_NUM} 160000 160000 60000000 60000000
+
+; ── GAMEDB 서버 ───────────────────────────────────────────────────────────
+$TEMPLATE:GameDB#GAMEDB
+0 - User 127.0.0.1 127.0.0.1 X 0 4096 4096 4096 4096
+FOREACH:GAME 0 - Game{EACH_NUM} {EACH}:LOCAL {SELF}:LOCAL {EACH_NUM} 160000 160000 10240000 10240000
+1 - Login {SELF}:LOCAL LOGIN:LOCAL {SELF_NUM} 4096 4096 5120000 5120000
+
+; ── GATE 서버 ($TEMPLATE 사용, 유저 포트 X 고정) ──────────────────────────
+; 유저 포트(예: 14001, 14002...)가 서버마다 다를 경우
+; $SERVER:GATE1 / $SERVER:GATE2 처럼 개별 블록으로 따로 작성하세요.
+$TEMPLATE:GATE
+0 - User {SELF}:LOCAL {SELF}:LOCAL X 14001 8192 8192 512000 512000
+1 - Update {SELF}:LOCAL UPDATE:LOCAL X 15500 4096 4096 1000000 1000000
+FOREACH:GAME 1 - Game{EACH_NUM} {SELF}:LOCAL {EACH}:LOCAL {EACH_NUM} 160000 160000 30000000 30000000
+1 - Login {SELF}:LOCAL LOGIN:LOCAL {SELF_NUM} 160000 160000 5120000 5120000
+
+; ── 개별 서버 직접 정의 예시 ($SERVER) ────────────────────────────────────
+; $SERVER:표시이름#서버이름  (# 없으면 표시이름 = 서버이름)
+; FOREACH 는 $TEMPLATE 전용입니다. $SERVER 는 라인 하나하나 직접 작성.
+;
+; $SERVER:GATE1
+; 0 - User GATE1:LOCAL GATE1:LOCAL X 14001 8192 8192 512000 512000
+; 1 - Update GATE1:LOCAL UPDATE:LOCAL X 15500 4096 4096 1000000 1000000
+; 1 - Game11 GATE1:LOCAL GAME11:LOCAL 11 160000 160000 30000000 30000000
+; 1 - Game12 GATE1:LOCAL GAME12:LOCAL 12 160000 160000 30000000 30000000
+; 1 - Login GATE1:LOCAL LOGIN:LOCAL X 20001 160000 160000 5120000 5120000
