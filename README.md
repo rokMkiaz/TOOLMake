@@ -1,57 +1,77 @@
 # TOOLMake
 
-업무 중 반복적으로 발생하는 작업을 줄이기 위해 만든 **개인 툴 모음 저장소**입니다.
+A collection of **practical utility tools** built to reduce repetitive work, verify data, and speed up small operational tasks.
 
-이 저장소는 하나의 완성된 서비스보다는,  
-실제 운영/개발 과정에서 필요했던 **자동화 도구, 점검 도구, 간단한 서버 실험, 데이터 추출 보조 툴**을 모아둔 workspace 성격에 가깝습니다.
+This repository is not a single product.  
+It is a toolbox of small projects created during development and live-service workflows, with a focus on:
 
-## Why this repository exists
+- **automation**
+- **validation**
+- **data extraction**
+- **internal utility tooling**
+- **small server/network experiments**
 
-실무를 하다 보면 아래 같은 작업이 자주 생깁니다.
+## Overview
 
-- 반복 입력이나 반복 클릭 자동화
-- 간단한 네트워크/서버 동작 확인
-- 설정값/확률값 검증
-- 특정 데이터 추출 및 가공
-- 복구 이후 필요한 후처리 자동화
-- 파일 기반 결과물을 빠르게 확인할 수 있는 내부용 뷰어 제작
+In real development and live-service environments, many problems are not huge system design issues.  
+They are often small but repetitive tasks such as:
 
-이 저장소는 그런 작업들을 **작게 만들고, 빠르게 써보고, 필요하면 다시 개선하는 용도**로 관리하고 있습니다.
+- repeating manual input or click sequences
+- checking percentages or calculated values
+- extracting specific data after DB recovery
+- validating configuration or server connection data
+- building quick internal viewers for generated files
+- testing simple client-server communication flows
 
-## Repository structure
+This repository exists to solve those problems in a more practical way.
+
+## Goals
+
+The main goals of this repository are:
+
+- Reduce repetitive manual work
+- Lower the chance of human error
+- Improve speed in small operational workflows
+- Build simple tools for validation and investigation
+- Create lightweight utilities instead of overengineering
+
+## Projects
 
 ### `AutoKey`
-반복 입력/자동화 성격의 유틸 프로젝트입니다.  
-간단한 업무 자동화 실험용으로 만들었고, 후속 버전도 별도로 분리했습니다.
+A utility project for automating repetitive input-based tasks.  
+Built as a lightweight helper for reducing manual actions in repetitive workflows.
 
 ### `AutoKey_v2`
-`AutoKey`를 확장하거나 개선한 버전입니다.  
-기존 아이디어를 유지하면서 구조나 사용 방식을 다듬는 용도로 분리했습니다.
+An improved or extended version of `AutoKey`.  
+Used to refine the previous approach and test a better structure or usage flow.
 
 ### `ChatServer`
-간단한 **채팅 서버 / 클라이언트** 예제입니다.  
-네트워크 통신 흐름이나 서버-클라이언트 구조를 빠르게 확인하기 위한 소규모 실험 프로젝트입니다.
+A small **chat server / client** example project.  
+Created to test and understand basic client-server communication, message flow, and simple network behavior.
 
 ### `ConnnectTool2`
-설정 파일 및 서버 목록(`config_template.txt`, `servers.csv`)을 기반으로 사용하는 연결 보조 툴입니다.  
-여러 서버나 환경 정보를 다루는 반복 작업을 줄이는 목적의 유틸입니다.
+A connection helper tool that works with configuration files and server lists such as:
+
+- `config_template.txt`
+- `servers.csv`
+
+Its purpose is to simplify repeated connection-related tasks across multiple environments or server targets.
 
 ### `FindProj`
-Node.js 기반 프로젝트입니다.  
-파일을 추출한 뒤 HTML 형태로 보여주는 방식으로 구성되어 있으며,  
-내부 데이터/결과물을 사람이 빠르게 확인할 수 있도록 만든 도구입니다.
+A Node.js-based project that extracts files and presents results in HTML format.  
+Built as a lightweight internal-style viewer for quickly checking generated or collected file-based data.
 
 ### `PercentCheckTool`
-특정 비율/확률/계산 결과를 점검하기 위한 간단한 검증 도구입니다.  
-게임 로직이나 운영 데이터 검증처럼, 숫자가 틀리면 문제가 커질 수 있는 상황을 빠르게 확인하기 위한 용도로 만들었습니다.
+A small utility for validating percentage-based or probability-based values.  
+Useful in cases where incorrect numeric settings can directly affect behavior or balance.
 
 ### `sqldb복구후 자동추출툴`
-SQL DB 복구 이후 필요한 데이터를 자동으로 추출하기 위한 보조 툴입니다.  
-복구 이후 반복적으로 수행해야 하는 후처리 작업을 줄이는 데 목적이 있습니다.
+A helper tool for automatically extracting required data after SQL DB recovery.  
+Built to reduce repeated post-recovery processing work and improve consistency.
 
-## Tech stack
+## Tech Stack
 
-이 저장소에는 여러 종류의 소규모 프로젝트가 함께 들어 있어 기술 스택도 혼합되어 있습니다.
+This repository contains multiple small projects, so the tech stack is mixed depending on the tool.
 
 - **C#**
 - **JavaScript / Node.js**
@@ -60,33 +80,40 @@ SQL DB 복구 이후 필요한 데이터를 자동으로 추출하기 위한 보
 - **Python**
 - **T-SQL**
 
-## Focus
+## What this repository represents
 
-이 저장소에서 중요하게 본 포인트는 다음과 같습니다.
+This repository reflects how I approach engineering problems in practice:
 
-- **반복 작업 자동화**
-- **운영 편의성 향상**
-- **작은 문제를 빠르게 해결하는 도구 제작**
-- **실무 상황에 맞춘 검증/추출 유틸**
-- **필요한 기능을 과하지 않게 구현하는 실용성**
+- solve real and repeated problems with small tools
+- automate work when manual repetition is wasteful
+- build validation tools when mistakes are expensive
+- prefer practical usefulness over unnecessary complexity
+- treat tooling as part of engineering productivity
 
 ## Notes
 
-- 대부분의 프로젝트는 **개인 학습 + 실무 보조 성격**을 함께 갖고 있습니다.
-- 공개 가능한 범위만 정리했기 때문에, 실제 사내 환경이나 운영 데이터는 포함하지 않습니다.
-- 일부 프로젝트는 실험용/프로토타입 성격이라 구조가 단순할 수 있습니다.
+- Most projects here are **small, purpose-driven utilities**
+- Some tools are experimental or prototype-style projects
+- Only public-safe code and content are included
+- Internal company logic, production data, and private operational details are not included
 
-## Future improvements
+## Future Improvements
 
-앞으로는 아래 방향으로 정리할 예정입니다.
+Planned improvements for this repository:
 
-- 각 하위 프로젝트별 README 추가
-- 실행 방법 및 사용 예시 보강
-- 스크린샷 / 입력-출력 예시 추가
-- 프로젝트 목적과 결과를 더 명확하게 문서화
+- Add a dedicated README for each subproject
+- Document how to run each tool
+- Add screenshots or sample input/output
+- Clarify the problem each tool solves and the expected result
+- Reorganize project folders for better readability
 
----
+## Summary
 
-작은 툴이라도 반복 업무를 줄이고,  
-실수를 줄이며,  
-운영 속도를 높이는 데 의미가 있다고 생각합니다.
+Even small tools can have real engineering value.
+
+This repository is focused on building practical utilities that help with:
+
+- faster workflows
+- safer operations
+- repeated task reduction
+- lightweight validation and investigation
